@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quarter City 3D MVP v12</title>
+  <link rel="stylesheet" href="src/style.css" />
+</head>
+<body>
+  <div id="startScreen" class="start-screen">
+    <div class="poster">
+      <div class="eyebrow">Q-REPORT GAME DEMO</div>
+      <h1>QUARTER<br/>CITY</h1>
+      <p>Интерактивный квартальный отчет в формате мини-игры</p>
+      <button id="startBtn">START MISSION</button>
+      <div class="hint">WASD — ходить на любой раскладке · мышь — смотреть · Space — прыжок · E — миссия · P — телефон · звонки открывают задания</div>
+    </div>
+  </div>
+
+  <div id="fileWarning" class="file-warning hidden">⚠️ Вы открыли проект как <b>file://</b>. 3D-модели glTF браузер блокирует из-за CORS. Для полной версии запустите локальный сервер: <code>python -m http.server 8000</code>. В этой версии включен fallback-город.</div>
+
+  <div id="hud" class="hud hidden">
+    <div class="brand">
+      <strong>QUARTER CITY</strong>
+      <span>Release Report MVP v12</span>
+    </div>
+    <div class="hud-right"><div id="health" class="health"></div><div class="stars">★ ★ ★ ☆ ☆</div></div>
+  </div>
+
+  <div id="objective" class="objective hidden">
+    <div class="label">CURRENT OBJECTIVE</div>
+    <div id="objectiveText">Подойдите к маркеру миссии</div>
+  </div>
+
+  <div id="prompt" class="prompt hidden">Нажмите <b>E</b>, чтобы принять миссию</div>
+
+  <div id="phone" class="phone hidden">
+    <div class="phone-top">📱 Quarter Phone <button id="phoneClose" class="phone-close">×</button></div>
+    <div id="phoneList"></div>
+    <div class="phone-section-title">ACHIEVEMENTS</div>
+    <div id="achievementsList"></div>
+  </div>
+
+  <canvas id="minimap" width="180" height="180" class="minimap hidden"></canvas>
+
+  <div id="missionOverlay" class="mission-overlay hidden">
+    <div class="mission-card">
+      <div class="mission-status" id="missionStatus">MISSION PASSED</div>
+      <h2 id="missionTitle">Mass Mailing</h2>
+      <p id="missionDesc">Новая возможность разблокирована</p>
+      <div id="missionReward" class="reward">+ Communication XP</div>
+      <div id="missionDots" class="mission-dots"></div>
+      <button id="missionNext">ДАЛЬШЕ</button>
+    </div>
+  </div>
+
+  <div id="help" class="help hidden">
+    <b>Управление</b><br/>
+    Клик по экрану — захват мыши<br/>
+    WASD / стрелки — ходить, работает на RU/EN<br/>
+    Мышь — обзор<br/>
+    E — принять миссию<br/>
+    P — телефон<br/>
+    M — миникарта<br/>
+    Space — прыжок<br/>
+    Esc — освободить курсор · R — вернуть игрока на старт
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="src/world.js"></script>
+  <script src="src/player.js"></script>
+  <script src="src/missions.js"></script>
+  <script src="src/ui.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
