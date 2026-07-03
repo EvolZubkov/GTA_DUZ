@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: Inter, Arial, sans-serif; background: #0b0613; color: white; }
+canvas { display: block; }
+.hud { position: fixed; inset: 0; pointer-events: none; }
+.brand { position: absolute; top: 18px; left: 18px; text-shadow: 0 0 18px #fff; }
+.brand b { display:block; font-size: 34px; line-height: .9; }
+.brand span { color:#22f4ff; letter-spacing: 5px; font-weight: 800; }
+.objective { position:absolute; top: 92px; left: 18px; width: 355px; padding: 18px; background: rgba(8,5,15,.78); border: 1px solid rgba(255,255,255,.18); border-radius: 16px; box-shadow: 0 0 32px rgba(34,244,255,.12); }
+.objective b { color:#22f4ff; letter-spacing: 2px; font-size: 13px; }
+.objective p { margin: 8px 0 0; font-weight: 700; font-size: 18px; }
+.health { position:absolute; top: 18px; right: 20px; padding: 12px 20px; background: rgba(8,5,15,.82); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; box-shadow: 0 0 24px rgba(255,43,214,.2); font-size: 30px; color: #ff3b7a; letter-spacing: 4px; }
+.minimap { position:absolute; top: 92px; right: 26px; width: 170px; height:170px; border-radius: 50%; border: 4px solid rgba(255,255,255,.25); box-shadow: 0 0 30px rgba(34,244,255,.2); background: #020713; }
+.controls { position:absolute; left: 18px; bottom: 18px; padding: 18px; width: 375px; background: rgba(2,7,12,.75); border: 1px solid rgba(255,255,255,.16); border-radius: 16px; font-weight: 700; line-height: 1.55; }
+.hint { position:absolute; left: 50%; bottom: 86px; transform: translateX(-50%); padding: 16px 28px; border-radius: 999px; background: rgba(8,5,15,.86); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 0 32px rgba(255,43,214,.25); opacity:0; transition:.2s; font-weight:800; }
+.hint.visible { opacity: 1; }
+.toast { position:absolute; top: 90px; left:50%; transform:translateX(-50%) translateY(-20px); padding: 14px 24px; border-radius:14px; background:rgba(8,5,15,.9); border:1px solid rgba(255,255,255,.2); opacity:0; transition:.2s; font-size:20px; font-weight:900; }
+.toast.visible { opacity:1; transform:translateX(-50%) translateY(0); }
+.modal { pointer-events:auto; position:absolute; inset:0; display:grid; place-items:center; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
+.modal.hidden { display:none; }
+.card, .phone-call { width:min(640px, 92vw); padding: 34px; border-radius: 24px; background: linear-gradient(135deg, rgba(18,12,32,.98), rgba(35,11,54,.96)); border:1px solid rgba(255,255,255,.2); box-shadow: 0 0 60px rgba(255,43,214,.22); }
+.eyebrow, .phone-top { color:#22f4ff; font-weight:900; letter-spacing:3px; }
+h1 { margin: 8px 0 12px; font-size: 42px; }
+h2 { margin: 0 0 12px; font-size: 26px; color:#ffcf57; }
+p { font-size: 19px; line-height: 1.45; }
+button { pointer-events:auto; margin-top: 18px; margin-right: 12px; border:0; border-radius:12px; padding: 14px 22px; background:#22f4ff; color:#061018; font-weight:900; cursor:pointer; }
+button.danger { background:#ff3b7a; color:white; }
