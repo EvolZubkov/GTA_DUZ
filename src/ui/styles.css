@@ -9,6 +9,13 @@ canvas { display: block; }
 .objective b { color:#22f4ff; letter-spacing: 2px; font-size: 13px; }
 .objective p { margin: 8px 0 0; font-weight: 700; font-size: 18px; }
 .health { position:absolute; top: 18px; right: 20px; padding: 12px 20px; background: rgba(8,5,15,.82); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; box-shadow: 0 0 24px rgba(255,43,214,.2); font-size: 30px; color: #ff3b7a; letter-spacing: 4px; }
+.health.hit { animation: heartLoss .6s ease; }
+@keyframes heartLoss {
+  0% { transform: scale(1); filter: brightness(1); }
+  15% { transform: scale(1.35); filter: brightness(2.4) drop-shadow(0 0 18px #ff2b4d); }
+  40% { transform: scale(0.92); filter: brightness(1.6); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
 .minimap { position:absolute; top: 92px; right: 26px; width: 170px; height:170px; border-radius: 50%; border: 4px solid rgba(255,255,255,.25); box-shadow: 0 0 30px rgba(34,244,255,.2); background: #020713; }
 .controls { position:absolute; left: 18px; bottom: 18px; padding: 18px; width: 375px; background: rgba(2,7,12,.75); border: 1px solid rgba(255,255,255,.16); border-radius: 16px; font-weight: 700; line-height: 1.55; }
 .hint { position:absolute; left: 50%; bottom: 86px; transform: translateX(-50%); padding: 16px 28px; border-radius: 999px; background: rgba(8,5,15,.86); border: 1px solid rgba(255,255,255,.22); box-shadow: 0 0 32px rgba(255,43,214,.25); opacity:0; transition:.2s; font-weight:800; }
@@ -17,10 +24,93 @@ canvas { display: block; }
 .toast.visible { opacity:1; transform:translateX(-50%) translateY(0); }
 .modal { pointer-events:auto; position:absolute; inset:0; display:grid; place-items:center; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
 .modal.hidden { display:none; }
-.card, .phone-call { width:min(640px, 92vw); padding: 34px; border-radius: 24px; background: linear-gradient(135deg, rgba(18,12,32,.98), rgba(35,11,54,.96)); border:1px solid rgba(255,255,255,.2); box-shadow: 0 0 60px rgba(255,43,214,.22); }
-.eyebrow, .phone-top { color:#22f4ff; font-weight:900; letter-spacing:3px; }
+.modal.failed { background: rgba(40,0,5,.7); }
+.card { width:min(640px, 92vw); padding: 34px; border-radius: 24px; background: linear-gradient(135deg, rgba(18,12,32,.98), rgba(35,11,54,.96)); border:1px solid rgba(255,255,255,.2); box-shadow: 0 0 60px rgba(255,43,214,.22); }
+.eyebrow { color:#22f4ff; font-weight:900; letter-spacing:3px; }
 h1 { margin: 8px 0 12px; font-size: 42px; }
 h2 { margin: 0 0 12px; font-size: 26px; color:#ffcf57; }
 p { font-size: 19px; line-height: 1.45; }
 button { pointer-events:auto; margin-top: 18px; margin-right: 12px; border:0; border-radius:12px; padding: 14px 22px; background:#22f4ff; color:#061018; font-weight:900; cursor:pointer; }
 button.danger { background:#ff3b7a; color:white; }
+
+.mission-failed { text-align:center; background: linear-gradient(160deg, rgba(46,4,10,.98), rgba(70,6,16,.97)); border-color: rgba(255,59,90,.45); box-shadow: 0 0 90px rgba(255,20,50,.4); }
+.mission-failed h1 { color:#ff3b5a; font-size:54px; letter-spacing:3px; }
+.mission-failed button { background:#ff3b5a; color:white; }
+
+/* Слайды миссий были тем же размером, что и любая другая карточка-модалка
+   (звонок, "провал") — крупнее и просторнее, раз это основной контент
+   игры, а не побочное уведомление. */
+.mission-card { width:min(880px, 94vw); padding: 52px 56px; }
+.mission-card .eyebrow { font-size: 15px; }
+.mission-card h1 { font-size: 52px; }
+.mission-card h2 { font-size: 32px; }
+.mission-card p { font-size: 23px; line-height: 1.55; }
+.mission-card .row { margin-top: 8px; }
+.mission-card button { font-size: 17px; padding: 16px 28px; }
+
+.blink-overlay { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .13s ease; z-index:50; }
+.blink-overlay.closed { opacity:1; }
+
+/* Экран входящего вызова — стилизован под корпус смартфона, а не под
+   обычную карточку-модалку, чтобы "звонок" реально выглядел звонком. */
+.modal.phone-modal { background: rgba(0,0,0,.6); }
+.phone-shell {
+  width: min(340px, 86vw);
+  aspect-ratio: 9 / 18.5;
+  background: linear-gradient(180deg, #17141f, #0a0810);
+  border: 3px solid #2c2836;
+  border-radius: 46px;
+  box-shadow: 0 0 0 8px rgba(0,0,0,.5), 0 30px 80px rgba(0,0,0,.6), 0 0 60px rgba(34,244,255,.15);
+  position: relative;
+  padding: 22px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.phone-notch { position:absolute; top:14px; left:50%; transform:translateX(-50%); width:90px; height:22px; background:#0a0810; border-radius:14px; box-shadow: inset 0 0 0 2px #221f2b; }
+.phone-screen { margin-top: 46px; display:flex; flex-direction:column; align-items:center; text-align:center; flex:1; width:100%; }
+.phone-status { color:#22f4ff; font-weight:800; letter-spacing:2px; font-size:13px; text-transform:uppercase; }
+.phone-avatar {
+  margin-top: 22px; width:84px; height:84px; border-radius:50%;
+  background: linear-gradient(135deg, #ff2bd6, #7a2bff);
+  display:grid; place-items:center; font-size:36px; font-weight:900; color:white;
+  box-shadow: 0 0 30px rgba(255,43,214,.45);
+}
+.phone-caller { margin: 16px 0 6px; font-size: 26px; }
+
+/* Ответ звонка — трек со свайпом вместо клика по кружку-кнопке: ручка
+   посередине, тянуть мышью к зелёной зоне (принять) или красной
+   (отклонить). Свайп реалистичнее статичной кнопки и не даёт увидеть, что
+   выбор уже сделан, до того как рука реально доехала до края. */
+.phone-call-layout { display:flex; align-items:center; gap: 26px; }
+.phone-swipe-track {
+  position:relative; width:100%; height:60px; margin-top:auto; margin-bottom:8px;
+  background:rgba(255,255,255,.07); border-radius:30px; overflow:hidden;
+}
+.phone-swipe-zone { position:absolute; top:0; bottom:0; width:50%; display:flex; align-items:center; font-size:20px; font-weight:900; }
+.phone-swipe-zone.decline { left:0; padding-left:18px; color:#ff3b5a; }
+.phone-swipe-zone.accept { right:0; justify-content:flex-end; padding-right:18px; color:#28e07a; }
+.phone-swipe-track.answered .phone-swipe-zone.decline,
+.phone-swipe-track.declined .phone-swipe-zone.accept { opacity:.15; }
+.phone-swipe-handle {
+  position:absolute; top:2px; left:50%; width:56px; height:56px; border-radius:50%;
+  background:linear-gradient(135deg,#3a3548,#18141f); border:2px solid rgba(255,255,255,.3);
+  display:grid; place-items:center; font-size:24px; color:white; cursor:grab; touch-action:none;
+  transform:translateX(-50%); transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 4px 16px rgba(0,0,0,.45); user-select:none;
+}
+.phone-swipe-handle.dragging { cursor:grabbing; transition:none; }
+.phone-hint { margin-top:10px; font-size:12px; opacity:.6; text-align:center; }
+
+/* Текст задания появляется только после ответа — "облачко" рядом с
+   телефоном, а не строкой на самом экране звонка (в жизни его не видно,
+   пока не взял трубку). */
+.phone-bubble {
+  position:relative; max-width:300px; padding:20px 22px; border-radius:18px;
+  background:#19152a; border:1px solid rgba(255,255,255,.2); box-shadow:0 14px 45px rgba(0,0,0,.5);
+  opacity:0; transform:translateX(-14px) scale(.96); pointer-events:none; transition:.25s ease;
+}
+.phone-bubble.visible { opacity:1; transform:translateX(0) scale(1); pointer-events:auto; }
+.phone-bubble-arrow { position:absolute; left:-9px; top:38px; width:0; height:0; border-top:9px solid transparent; border-bottom:9px solid transparent; border-right:9px solid #19152a; }
+.phone-bubble p { margin:0 0 14px; }
+.phone-bubble button { margin:0; }

@@ -1,0 +1,17 @@
+export const CITYKIT_MODELS = [
+  'Building_Large_2.gltf',
+  'Building_Medium_2_001.gltf',
+  'Building_Small_1.gltf',
+  'Street_2Lane.gltf',
+  'Street_4Lane.gltf',
+  'Street_4WayIntersection.gltf',
+  'Street_TIntersection.gltf',
+  'Sidewalk_Straight_3m.gltf',
+  'Sidewalk_Corner_Flat_3m.gltf',
+  'Sidewalk_Corner_Round_3m.gltf',
+  'Prop_ACUnit.gltf',
+  'Prop_Bollard.gltf',
+  'Prop_ManholeCover.gltf',
+  'Prop_Planter_Single.gltf',
+  'Sidewalk_Planter.gltf',
+];

@@ -12,6 +12,7 @@ export class HUD {
         <div class="hint" id="hint"></div>
         <div class="toast" id="toast"></div>
         <div class="modal hidden" id="modal"></div>
+        <div class="blink-overlay" id="blinkOverlay"></div>
       </div>
     `);
     this.objective = document.querySelector('#objectiveText');
@@ -19,6 +20,7 @@ export class HUD {
     this.hint = document.querySelector('#hint');
     this.toast = document.querySelector('#toast');
     this.modal = document.querySelector('#modal');
+    this.blinkOverlay = document.querySelector('#blinkOverlay');
     this.map = document.querySelector('#minimap');
     this.ctx = this.map.getContext('2d');
     this.setHealth(5);
@@ -28,6 +30,17 @@ export class HUD {
   setObjective(text) { this.objective.textContent = text; }
   setInteractHint(text) { this.hint.textContent = text; this.hint.classList.toggle('visible', !!text); }
   setHealth(n) { this.health.innerHTML = Array.from({ length: 5 }, (_, i) => `<span>${i < n ? '♥' : '♡'}</span>`).join(''); }
+
+  // Мерцание/затухание при потере сердца — раньше об ударе машиной сообщал
+  // только текстовый toast, не сам индикатор здоровья. Убираем и тут же
+  // добавляем класс — reflow между ними нужен, чтобы анимация перезапускалась
+  // и при повторном ударе до истечения предыдущей (иначе CSS-анимация с уже
+  // добавленным классом не triggerится заново).
+  pulseHeartLoss() {
+    this.health.classList.remove('hit');
+    void this.health.offsetWidth;
+    this.health.classList.add('hit');
+  }
 
   showToast(text) {
     this.toast.textContent = text;
@@ -63,26 +76,151 @@ export class HUD {
     render();
   }
 
+  // Раньше звонок выглядел как обычная карточка-модалка — той же формы, что
+  // слайды миссий, ничем не намекая, что это именно телефон, и текст задания
+  // был виден ДО ответа (в жизни ты не знаешь, о чём звонок, пока не взял
+  // трубку). Теперь: (1) вместо кнопок-кружков — трек со свайпом (ручка
+  // посередине, зона "принять" справа, "отклонить" слева, тянуть мышью),
+  // (2) текст появляется только ПОСЛЕ ответа — отдельным "облачком" сбоку от
+  // телефона, а не на самом экране звонка.
   openCall({ caller, text, forced, onAccept, onDecline }) {
     this.modalOpen = true;
     document.exitPointerLock?.();
+    this.modal.classList.add('phone-modal');
     this.modal.innerHTML = `
-      <div class="phone-call">
-        <div class="phone-top">Входящий звонок</div>
-        <h1>${caller}</h1>
-        <p>${text}</p>
-        <button id="acceptCall">Взять трубку</button>
-        ${forced ? '' : '<button class="danger" id="declineCall">Отклонить</button>'}
+      <div class="phone-call-layout">
+        <div class="phone-shell">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-status">Входящий вызов</div>
+            <div class="phone-avatar">${caller.charAt(0)}</div>
+            <h1 class="phone-caller">${caller}</h1>
+            <div class="phone-swipe-track" id="swipeTrack">
+              <div class="phone-swipe-zone decline">✕</div>
+              <div class="phone-swipe-zone accept">✓</div>
+              <div class="phone-swipe-handle" id="swipeHandle">☏</div>
+            </div>
+            <div class="phone-hint">${forced ? 'Свайп вправо — ответить' : 'Свайп вправо — ответить, влево — отклонить'}</div>
+          </div>
+        </div>
+        <div class="phone-bubble" id="phoneBubble">
+          <div class="phone-bubble-arrow"></div>
+          <p>${text}</p>
+          <button id="continueCall">Продолжить</button>
+        </div>
       </div>`;
     this.modal.classList.remove('hidden');
-    this.modal.querySelector('#acceptCall').addEventListener('click', () => { this.closeModal(); onAccept(); });
-    this.modal.querySelector('#declineCall')?.addEventListener('click', () => { this.closeModal(); onDecline(); });
+
+    const track = this.modal.querySelector('#swipeTrack');
+    const handle = this.modal.querySelector('#swipeHandle');
+    const bubble = this.modal.querySelector('#phoneBubble');
+
+    this.setupPhoneSwipe(track, handle, {
+      allowDecline: !forced,
+      onAccept: () => {
+        track.classList.add('answered');
+        bubble.classList.add('visible');
+      },
+      onDecline: () => {
+        track.classList.add('declined');
+        setTimeout(() => { this.closeModal(); onDecline(); }, 220);
+      }
+    });
+
+    this.modal.querySelector('#continueCall').addEventListener('click', () => {
+      this.closeModal();
+      onAccept();
+    });
+  }
+
+  // Трек с ручкой посередине вместо клика по кнопке — тянешь мышью к одному
+  // из краёв; не дотянул до 60% хода — ручка возвращается в центр (звонок
+  // продолжает "звонить"), дотянул — принято/отклонено. pointerdown/move/up
+  // вместо mouse-специфичных событий, чтобы то же самое работало и с
+  // тачскрином без отдельной ветки логики.
+  setupPhoneSwipe(track, handle, { allowDecline, onAccept, onDecline }) {
+    const maxOffset = Math.max((track.clientWidth - handle.clientWidth) / 2 - 6, 10);
+    const threshold = maxOffset * 0.6;
+    let dragging = false;
+    let settled = false;
+    let startX = 0;
+    let offset = 0;
+
+    const setOffset = (v) => {
+      offset = v;
+      handle.style.transform = `translateX(calc(-50% + ${v}px))`;
+    };
+
+    handle.addEventListener('pointerdown', (e) => {
+      if (settled) return;
+      dragging = true;
+      startX = e.clientX;
+      handle.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointermove', (e) => {
+      if (!dragging) return;
+      let next = e.clientX - startX;
+      if (!allowDecline) next = Math.max(0, next);
+      next = Math.max(-maxOffset, Math.min(maxOffset, next));
+      setOffset(next);
+    });
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove('dragging');
+      if (offset > threshold) {
+        settled = true;
+        setOffset(maxOffset);
+        onAccept();
+      } else if (allowDecline && offset < -threshold) {
+        settled = true;
+        setOffset(-maxOffset);
+        onDecline();
+      } else {
+        setOffset(0);
+      }
+    };
+    handle.addEventListener('pointerup', release);
+    handle.addEventListener('pointercancel', release);
   }
 
   closeModal() {
     this.modal.classList.add('hidden');
     this.modal.innerHTML = '';
+    this.modal.classList.remove('failed', 'phone-modal');
     this.modalOpen = false;
+  }
+
+  // Экран смерти — визуальный, без отката прогресса миссий (в MissionManager
+  // нет и не появляется понятия "провален" — это просто GTA-style "тебя
+  // подобрали/откачали", а не полноценный fail-стейт).
+  showMissionFailed(onContinue) {
+    this.modalOpen = true;
+    this.modal.classList.add('failed');
+    this.modal.innerHTML = `
+      <div class="card mission-failed">
+        <div class="eyebrow">QUARTER CITY</div>
+        <h1>MISSION FAILED</h1>
+        <p>Тебя подобрали на районе. Батя К такое не одобряет.</p>
+        <button id="reviveBtn">Продолжить</button>
+      </div>`;
+    this.modal.classList.remove('hidden');
+    this.modal.querySelector('#reviveBtn').addEventListener('click', () => {
+      this.closeModal();
+      onContinue();
+    });
+  }
+
+  // "Моргание" — быстрое затемнение в чёрное и обратно, callback выполняется
+  // ровно в момент максимальной черноты (телепорт игрока в этот момент
+  // невидим для игрока, а не резкий скачок картинки).
+  blinkTransition(callback) {
+    this.blinkOverlay.classList.add('closed');
+    setTimeout(() => {
+      callback();
+      setTimeout(() => this.blinkOverlay.classList.remove('closed'), 40);
+    }, 140);
   }
 
   showAchievement(text) {

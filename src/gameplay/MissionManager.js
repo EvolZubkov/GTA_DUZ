@@ -1,5 +1,8 @@
 import * as THREE from 'three';
-import { MISSION_CHAIN } from '../config/missions.js';
+// Миссии — чистый JSON, а не JS-модуль: задать/поправить цепочку миссий
+// можно, не трогая код (и не рискуя сломать синтаксис JS), Vite поддерживает
+// import JSON нативно.
+import MISSION_CHAIN from '../config/missions.json';
 
 export class MissionManager {
   constructor(scene, ui) {
