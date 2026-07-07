@@ -10,6 +10,8 @@ import { TrafficSystem } from '../gameplay/TrafficSystem.js';
 import { PedestrianSystem } from '../gameplay/PedestrianSystem.js';
 import { DeathSequence } from '../gameplay/DeathSequence.js';
 import { HUD } from '../ui/HUD.js';
+import { TouchControls } from '../ui/TouchControls.js';
+import { isTouchDevice } from '../ui/device.js';
 
 // import { AssetBrowser } from './AssetBrowser.js';
 
@@ -35,6 +37,12 @@ export class Game {
     );
 
     this.missions = new MissionManager(this.sceneManager.scene, this.ui);
+
+    // Только на тачскрине — на десктопе джойстик/кнопки только мешали бы,
+    // да и isTouchDevice() там и не сработает.
+    if (isTouchDevice()) {
+      this.touchControls = new TouchControls(this.ui.hudEl, this.player, this.missions);
+    }
 
     this.deathSequence = new DeathSequence({
       scene: this.sceneManager.scene,

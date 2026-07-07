@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { findSafeSpawn } from '../gameplay/spawn.js';
+import { isTouchDevice } from '../ui/device.js';
 
 // Рост игрока (высота глаз камеры). Раньше был 1.75 — с новым масштабом
 // зданий (CITYPACK_SCALE) этаж стал ~2.2м, но 1.75 всё равно казалось
@@ -19,6 +20,11 @@ export class PlayerController {
     this.grounded = true;
     this.locked = false;
     this.keys = new Set();
+    // Аналоговый ввод с виртуального джойстика (TouchControls) — отдельно от
+    // keys, т.к. это плавные -1..1 значения, а не дискретные нажатия.
+    // Складывается с клавиатурным вводом в update(), а не заменяет его —
+    // так не нужно дублировать логику движения для двух источников ввода.
+    this.moveAxis = { x: 0, z: 0 };
     this.health = 5;
     this.invulnerableUntil = 0;
 
@@ -28,28 +34,53 @@ export class PlayerController {
     window.addEventListener('keydown', (event) => this.onKeyDown(event));
     window.addEventListener('keyup', (event) => this.onKeyUp(event));
     window.addEventListener('mousemove', (event) => this.onMouseMove(event));
-    window.addEventListener('click', () => {
-      if (!this.ui.blocksInput()) document.body.requestPointerLock();
-    });
+
+    // Pointer Lock — чисто десктопный концепт (курсор мыши, "мышь смотрит").
+    // На тачскрине его либо нет вовсе, либо он не даёт того же эффекта, а
+    // взгляд там крутится прямым перетаскиванием пальцем (см. TouchControls),
+    // поэтому на touch-устройствах даже не пытаемся его запросить.
+    if (!isTouchDevice()) {
+      window.addEventListener('click', () => {
+        if (!this.ui.blocksInput()) document.body.requestPointerLock();
+      });
+    }
   }
 
   onKeyDown(event) {
     this.keys.add(event.code);
-    if (event.code === 'Space' && this.grounded && !this.ui.blocksInput() && !this.locked) {
-      this.velocityY = this.jumpPower;
-      this.grounded = false;
-    }
+    if (event.code === 'Space') this.requestJump();
   }
 
   onKeyUp(event) {
     this.keys.delete(event.code);
   }
 
+  requestJump() {
+    if (this.grounded && !this.ui.blocksInput() && !this.locked) {
+      this.velocityY = this.jumpPower;
+      this.grounded = false;
+    }
+  }
+
+  // Вынесено из onMouseMove, чтобы TouchControls мог применять точно ту же
+  // логику поворота камеры к дельте пальца по экрану, а не дублировать её.
+  applyLook(dx, dy, sensitivity = 0.0022) {
+    this.camera.rotation.y -= dx * sensitivity;
+    this.camera.rotation.x -= dy * sensitivity;
+    this.camera.rotation.x = Math.max(-1.15, Math.min(1.05, this.camera.rotation.x));
+  }
+
   onMouseMove(event) {
     if (document.pointerLockElement !== document.body || this.ui.blocksInput()) return;
-    this.camera.rotation.y -= event.movementX * 0.0022;
-    this.camera.rotation.x -= event.movementY * 0.0022;
-    this.camera.rotation.x = Math.max(-1.15, Math.min(1.05, this.camera.rotation.x));
+    this.applyLook(event.movementX, event.movementY);
+  }
+
+  // x = вправо/влево (strafe), z = вперёд/назад — оба -1..1, вызывается
+  // виртуальным джойстиком на каждое движение пальца; (0,0) когда джойстик
+  // отпущен.
+  setMoveAxis(x, z) {
+    this.moveAxis.x = x;
+    this.moveAxis.z = z;
   }
 
   update(dt) {
@@ -66,14 +97,27 @@ export class PlayerController {
     right.y = 0;
     right.normalize();
 
-    const movement = new THREE.Vector3();
-    if (this.keys.has('KeyW') || this.keys.has('ArrowUp')) movement.add(forward);
-    if (this.keys.has('KeyS') || this.keys.has('ArrowDown')) movement.addScaledVector(forward, -1);
-    if (this.keys.has('KeyD') || this.keys.has('ArrowRight')) movement.add(right);
-    if (this.keys.has('KeyA') || this.keys.has('ArrowLeft')) movement.addScaledVector(right, -1);
+    // Клавиатурная ось (-1/0/+1 на направление) и джойстик (-1..1 плавно)
+    // складываются, а не выбирается один источник — так не нужно знать,
+    // каким устройством управляет игрок, просто оба источника пишут в одну
+    // и ту же математику, и на десктопе moveAxis всегда (0,0), а на тачскрине
+    // WASD-клавиш просто не бывает.
+    let axisF = (this.keys.has('KeyW') || this.keys.has('ArrowUp') ? 1 : 0)
+      - (this.keys.has('KeyS') || this.keys.has('ArrowDown') ? 1 : 0)
+      + this.moveAxis.z;
+    let axisR = (this.keys.has('KeyD') || this.keys.has('ArrowRight') ? 1 : 0)
+      - (this.keys.has('KeyA') || this.keys.has('ArrowLeft') ? 1 : 0)
+      + this.moveAxis.x;
+    axisF = Math.max(-1, Math.min(1, axisF));
+    axisR = Math.max(-1, Math.min(1, axisR));
 
-    if (movement.lengthSq() > 0) {
-      movement.normalize().multiplyScalar(this.speed * dt);
+    const movement = new THREE.Vector3();
+    movement.addScaledVector(forward, axisF);
+    movement.addScaledVector(right, axisR);
+
+    if (movement.lengthSq() > 1) movement.normalize();
+    if (movement.lengthSq() > 0.0001) {
+      movement.multiplyScalar(this.speed * dt);
       this.tryMove(movement);
     }
 

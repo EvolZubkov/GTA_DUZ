@@ -114,3 +114,30 @@ button.danger { background:#ff3b7a; color:white; }
 .phone-bubble-arrow { position:absolute; left:-9px; top:38px; width:0; height:0; border-top:9px solid transparent; border-bottom:9px solid transparent; border-right:9px solid #19152a; }
 .phone-bubble p { margin:0 0 14px; }
 .phone-bubble button { margin:0; }
+
+/* Мобильное управление — вставляется ПЕРВЫМ ребёнком .hud (см.
+   TouchControls), поэтому более поздние по разметке модалки (звонок,
+   слайды миссий, blink-overlay) естественным стекингом рендерятся поверх —
+   открытый звонок не даёт джойстику "просвечивать" рядом с картой звонка.
+   Сам контейнер pointer-events:none (как и .hud), интерактивны только
+   конкретные элементы внутри. */
+.touch-controls { position:absolute; inset:0; z-index:1; }
+.touch-look-zone { position:absolute; inset:0; pointer-events:auto; touch-action:none; }
+.touch-joystick {
+  position:absolute; left:26px; bottom:26px; width:124px; height:124px;
+  border-radius:50%; background:rgba(255,255,255,.08); border:2px solid rgba(255,255,255,.28);
+  pointer-events:auto; touch-action:none; z-index:1;
+}
+.touch-joystick-knob {
+  position:absolute; left:50%; top:50%; width:52px; height:52px; margin:-26px;
+  border-radius:50%; background:rgba(255,255,255,.4); border:2px solid rgba(255,255,255,.55);
+  transition:transform .08s linear;
+}
+.touch-buttons { position:absolute; right:22px; bottom:22px; display:flex; flex-direction:column; gap:14px; align-items:center; z-index:1; }
+.touch-btn {
+  pointer-events:auto; touch-action:none; -webkit-tap-highlight-color:transparent;
+  width:62px; height:62px; border-radius:50%; margin:0; padding:0;
+  border:2px solid rgba(255,255,255,.32); background:rgba(20,15,30,.6); color:white;
+  font-size:20px; font-weight:900; display:grid; place-items:center;
+}
+.touch-btn-jump { background:rgba(34,244,255,.22); border-color:rgba(34,244,255,.4); }

@@ -1,20 +1,31 @@
+import { isTouchDevice } from './device.js';
+
 export class HUD {
   constructor(root) {
     this.root = root;
     this.modalOpen = false;
+    // На тачскрине физической клавиатуры/мыши нет, а джойстик с кнопками
+    // (TouchControls) и так занимают весь нижний угол экрана и самоочевидны
+    // по виду — текстовая подсказка тут не нужна и просто перекрывалась бы
+    // джойстиком на маленьком экране (проверено скриншотом на эмуляции
+    // iPhone — коробка с текстом легла прямо поверх круга джойстика).
+    const controlsHint = isTouchDevice()
+      ? ''
+      : '<div class="controls"><b>Управление</b><br>Клик — захват мыши<br>WASD / стрелки — ходить<br>Мышь — обзор<br>E — миссия<br>P — телефон<br>Space — прыжок<br>R — старт</div>';
     root.insertAdjacentHTML('beforeend', `
       <div class="hud">
         <div class="brand"><b>QUARTER CITY</b><span>Engine 0.1.0</span></div>
         <div class="objective"><b>CURRENT OBJECTIVE</b><p id="objectiveText">Загрузка...</p></div>
         <div class="health" id="health"></div>
         <canvas class="minimap" id="minimap" width="170" height="170"></canvas>
-        <div class="controls"><b>Управление</b><br>Клик — захват мыши<br>WASD / стрелки — ходить<br>Мышь — обзор<br>E — миссия<br>P — телефон<br>Space — прыжок<br>R — старт</div>
+        ${controlsHint}
         <div class="hint" id="hint"></div>
         <div class="toast" id="toast"></div>
         <div class="modal hidden" id="modal"></div>
         <div class="blink-overlay" id="blinkOverlay"></div>
       </div>
     `);
+    this.hudEl = root.querySelector('.hud');
     this.objective = document.querySelector('#objectiveText');
     this.health = document.querySelector('#health');
     this.hint = document.querySelector('#hint');
