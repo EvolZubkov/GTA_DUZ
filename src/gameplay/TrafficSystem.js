@@ -122,7 +122,12 @@ export class TrafficSystem {
       // (DeathSequence), не проверяем новые столкновения — иначе другие
       // машины рядом с застывшим телом продолжали бы триггерить
       // knockback/мерцание сердца поверх уже идущей анимации смерти.
-      if (this.player.health <= 0) continue;
+      // ui.blocksInput() — открыт слайд миссии/звонок/mission failed:
+      // игрок не видит мир и не может увернуться, машина не должна тихо
+      // отжирать сердца и в итоге подменить читаемый слайд экраном
+      // "MISSION FAILED" (проверено — так и происходило: за 12 секунд с
+      // открытой карточкой миссии здоровье падало с 5 до 2).
+      if (this.player.health <= 0 || this.ui.blocksInput()) continue;
 
       const dist = car.position.distanceTo(this.player.position);
       if (dist < 2.5) {

@@ -5,6 +5,9 @@
 // base уводил бы запрос на несуществующий /citykit/ на корне домена.
 export const MODEL_BASE = `${import.meta.env.BASE_URL}citykit/`;
 
+// Видео для слайдов миссий (см. HUD.openSlides) — та же логика base-URL.
+export const CLIP_BASE = `${import.meta.env.BASE_URL}clips/`;
+
 export const CITYKIT = {
   buildings: [
     'Building_Small_1.gltf',

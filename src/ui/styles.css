@@ -1,9 +1,14 @@
+/* Кастомный GTA Russian.ttf оказался нечитаемым (буквы слипаются даже с
+   letter-spacing) — вернулись на стандартный системный шрифт. "GTA-стиль"
+   теперь делается не файлом шрифта, а начертанием: жирный (900) + КАПС +
+   трекинг на заголовках/титрах, обычный вес на текстовых блоках, где
+   читаемость важнее стилизации. */
 * { box-sizing: border-box; }
-html, body, #app { margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: Inter, Arial, sans-serif; background: #0b0613; color: white; }
+html, body, #app { margin: 0; width: 100%; height: 100%; overflow: hidden; font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif; background: #0b0613; color: white; }
 canvas { display: block; }
 .hud { position: fixed; inset: 0; pointer-events: none; }
 .brand { position: absolute; top: 18px; left: 18px; text-shadow: 0 0 18px #fff; }
-.brand b { display:block; font-size: 34px; line-height: .9; }
+.brand b { display:block; font-size: 34px; line-height: .9; font-weight:900; text-transform:uppercase; letter-spacing:.5px; }
 .brand span { color:#22f4ff; letter-spacing: 5px; font-weight: 800; }
 .objective { position:absolute; top: 92px; left: 18px; width: 355px; padding: 18px; background: rgba(8,5,15,.78); border: 1px solid rgba(255,255,255,.18); border-radius: 16px; box-shadow: 0 0 32px rgba(34,244,255,.12); }
 .objective b { color:#22f4ff; letter-spacing: 2px; font-size: 13px; }
@@ -25,28 +30,73 @@ canvas { display: block; }
 .modal { pointer-events:auto; position:absolute; inset:0; display:grid; place-items:center; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
 .modal.hidden { display:none; }
 .modal.failed { background: rgba(40,0,5,.7); }
-.card { width:min(640px, 92vw); padding: 34px; border-radius: 24px; background: linear-gradient(135deg, rgba(18,12,32,.98), rgba(35,11,54,.96)); border:1px solid rgba(255,255,255,.2); box-shadow: 0 0 60px rgba(255,43,214,.22); }
-.eyebrow { color:#22f4ff; font-weight:900; letter-spacing:3px; }
-h1 { margin: 8px 0 12px; font-size: 42px; }
-h2 { margin: 0 0 12px; font-size: 26px; color:#ffcf57; }
-p { font-size: 19px; line-height: 1.45; }
+/* max-height+overflow — слайд с видео и несколькими буллетами легко
+   выше типового 1366x768 ноутбучного экрана (проверено: 850px карточка на
+   768px viewport обрезала кнопку "Далее" снизу, до неё было не добраться).
+   Теперь при нехватке места карточка сама скроллится, а не обрезается. */
+.card { width:min(640px, 92vw); max-height:90vh; overflow-y:auto; padding: 34px; border-radius: 24px; background: linear-gradient(135deg, rgba(18,12,32,.98), rgba(35,11,54,.96)); border:1px solid rgba(255,255,255,.2); box-shadow: 0 0 60px rgba(255,43,214,.22); }
+.eyebrow { color:#22f4ff; font-weight:900; letter-spacing:3px; text-transform:uppercase; }
+h1 { margin: 8px 0 12px; font-size: 44px; font-weight:900; text-transform:uppercase; letter-spacing:1px; }
+h2 { margin: 0 0 12px; font-size: 27px; color:#ffcf57; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+p { font-size: 20px; font-weight:500; line-height: 1.5; }
 button { pointer-events:auto; margin-top: 18px; margin-right: 12px; border:0; border-radius:12px; padding: 14px 22px; background:#22f4ff; color:#061018; font-weight:900; cursor:pointer; }
 button.danger { background:#ff3b7a; color:white; }
 
 .mission-failed { text-align:center; background: linear-gradient(160deg, rgba(46,4,10,.98), rgba(70,6,16,.97)); border-color: rgba(255,59,90,.45); box-shadow: 0 0 90px rgba(255,20,50,.4); }
-.mission-failed h1 { color:#ff3b5a; font-size:54px; letter-spacing:3px; }
+.mission-failed h1 { color:#ff3b5a; font-size:54px; letter-spacing:2px; }
+.mission-failed p { font-size: 22px; }
 .mission-failed button { background:#ff3b5a; color:white; }
 
 /* Слайды миссий были тем же размером, что и любая другая карточка-модалка
    (звонок, "провал") — крупнее и просторнее, раз это основной контент
    игры, а не побочное уведомление. */
-.mission-card { width:min(880px, 94vw); padding: 52px 56px; }
+/* Практически на весь экран — контент (видео-скринкаст + текст) заметно
+   крупнее, чем помещалось в прежние 880px. */
+.mission-card { width:min(1500px, 96vw); max-height:94vh; padding: 48px 64px; }
 .mission-card .eyebrow { font-size: 15px; }
-.mission-card h1 { font-size: 52px; }
-.mission-card h2 { font-size: 32px; }
-.mission-card p { font-size: 23px; line-height: 1.55; }
-.mission-card .row { margin-top: 8px; }
+.mission-card h1 { font-size: 52px; letter-spacing: 1.5px; }
+.mission-card h2 { font-size: 32px; letter-spacing: .8px; }
+.mission-card p { font-size: 24px; line-height: 1.55; }
+.mission-card .row { margin-top: 24px; }
 .mission-card button { font-size: 17px; padding: 16px 28px; }
+
+/* Слайд = зона видео (опционально) + текстовая зона. videoPosition решает
+   порядок/направление (row для left/right, column для top/bottom), videoSize
+   — долю зоны видео. Внутри текстовой зоны textWidth/textAlign — это и есть
+   "контейнер": более узкая колонка, не растянутая на всю ширину, с margin
+   auto по нужную сторону для позиционирования и text-align для выравнивания
+   самого текста. textValign — justify-content зоны, положение колонки по
+   высоте. */
+.mission-card-content { display:flex; gap: 32px; }
+.mission-card-content.vertical { flex-direction: column; }
+.mission-card-media { border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+/* height:100% на видео зависело от высоты родителя (.mission-card-media),
+   а та в вертикальной раскладке ничем не задана (auto по контенту) —
+   циклическая процентная зависимость, которую спека резолвит по-разному в
+   зависимости от контекста, и на практике видео оказывалось нулевой высоты
+   (эффект "видео не видно"). height:auto считает высоту прямо из
+   собственного соотношения сторон видео при заданной ширине — без
+   зависимости от родителя вообще. */
+.mission-card-media video { display:block; width:100%; height:auto; }
+.mission-card-text { display:flex; flex-direction:column; min-width:0; }
+.mission-card-text-inner { max-width:100%; }
+.mission-bullets { margin: 12px 0 0; padding-left: 22px; font-size: 21px; font-weight:500; line-height:1.6; }
+.mission-bullets li { margin-bottom: 6px; }
+
+/* Анимация вешается как класс на свежесозданный узел при каждом рендере
+   слайда (render() пересобирает innerHTML целиком) — поэтому срабатывает
+   заново на каждый клик/тап Далее/Назад, а не только один раз при монтировании
+   модалки. */
+@keyframes missionSlideLeft { from { transform: translateX(-48px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+@keyframes missionSlideRight { from { transform: translateX(48px); opacity:0; } to { transform: translateX(0); opacity:1; } }
+@keyframes missionSlideUp { from { transform: translateY(48px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+@keyframes missionSlideDown { from { transform: translateY(-48px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+@keyframes missionFadeIn { from { opacity:0; } to { opacity:1; } }
+.mission-anim-slide-left { animation: missionSlideLeft .38s cubic-bezier(.22,.9,.36,1) both; }
+.mission-anim-slide-right { animation: missionSlideRight .38s cubic-bezier(.22,.9,.36,1) both; }
+.mission-anim-slide-up { animation: missionSlideUp .38s cubic-bezier(.22,.9,.36,1) both; }
+.mission-anim-slide-down { animation: missionSlideDown .38s cubic-bezier(.22,.9,.36,1) both; }
+.mission-anim-fade { animation: missionFadeIn .45s ease both; }
 
 .blink-overlay { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .13s ease; z-index:50; }
 .blink-overlay.closed { opacity:1; }

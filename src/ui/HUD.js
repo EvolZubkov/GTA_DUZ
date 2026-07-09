@@ -1,4 +1,8 @@
 import { isTouchDevice } from './device.js';
+import { CLIP_BASE } from '../config/assets.js';
+
+const TEXT_VALIGN = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
+const TEXT_HALIGN_MARGIN = { left: '0 auto 0 0', center: '0 auto', right: '0 0 0 auto' };
 
 export class HUD {
   constructor(root) {
@@ -60,23 +64,69 @@ export class HUD {
     this.toastTimer = setTimeout(() => this.toast.classList.remove('visible'), 1800);
   }
 
+  // Схема слайда (все поля кроме title/text опциональны):
+  // { title, text, bullets:[...], video, videoPosition:'left'|'right'|'top'|'bottom',
+  //   videoSize:0-100, textAlign:'left'|'center'|'right', textValign:'top'|'middle'|'bottom',
+  //   textWidth:0-100, animation:'slide'|'fade', animationDirection:'left'|'right'|'up'|'down' }
   openSlides(mission, onComplete) {
     this.modalOpen = true;
     let i = 0;
     const render = () => {
       const slide = mission.slides[i];
+      const vertical = slide.videoPosition === 'top' || slide.videoPosition === 'bottom';
+      const mediaFirst = !slide.videoPosition || slide.videoPosition === 'left' || slide.videoPosition === 'top';
+      const videoSize = slide.videoSize ?? 50;
+      const textAlign = slide.textAlign || 'left';
+      const textValign = TEXT_VALIGN[slide.textValign] || 'flex-start';
+      const textMargin = TEXT_HALIGN_MARGIN[textAlign] || TEXT_HALIGN_MARGIN.left;
+      const textWidth = slide.textWidth ?? 100;
+      const animClass = slide.animation === 'fade'
+        ? 'mission-anim-fade'
+        : slide.animation === 'slide'
+          ? `mission-anim-slide-${slide.animationDirection || 'up'}`
+          : '';
+
+      const mediaHtml = slide.video ? `
+        <div class="mission-card-media" style="order:${mediaFirst ? 0 : 1};${
+          vertical ? `width:${videoSize}%;margin:0 auto;` : `flex:0 0 ${videoSize}%;`
+        }">
+          <video src="${CLIP_BASE}${slide.video}" autoplay muted loop playsinline></video>
+        </div>` : '';
+
+      const bulletsHtml = Array.isArray(slide.bullets) && slide.bullets.length
+        ? `<ul class="mission-bullets">${slide.bullets.map((b) => `<li>${b}</li>`).join('')}</ul>`
+        : '';
+
+      const textHtml = `
+        <div class="mission-card-text ${animClass}" style="order:${mediaFirst ? 1 : 0};justify-content:${textValign};${
+          slide.video && !vertical ? `flex:0 0 ${100 - videoSize}%;` : ''
+        }">
+          <div class="mission-card-text-inner" style="width:${textWidth}%;margin:${textMargin};text-align:${textAlign};">
+            <div class="eyebrow">MISSION</div>
+            <h1>${mission.title}</h1>
+            <h2>${slide.title}</h2>
+            ${slide.text ? `<p>${slide.text}</p>` : ''}
+            ${bulletsHtml}
+          </div>
+        </div>`;
+
       this.modal.innerHTML = `
         <div class="card mission-card">
-          <div class="eyebrow">MISSION</div>
-          <h1>${mission.title}</h1>
-          <h2>${slide.title}</h2>
-          <p>${slide.text}</p>
+          <div class="mission-card-content${vertical ? ' vertical' : ''}">
+            ${mediaHtml}
+            ${textHtml}
+          </div>
           <div class="row">
             ${i > 0 ? '<button id="prevSlide">Назад</button>' : ''}
             <button id="nextSlide">${i === mission.slides.length - 1 ? 'Завершить миссию' : 'Далее'}</button>
           </div>
         </div>`;
       this.modal.classList.remove('hidden');
+      // autoplay-атрибут ненадёжен для <video>, вставленного через innerHTML
+      // (проверено — без явного play() ролик остаётся на первом кадре) —
+      // запускаем вручную, ошибку игнорируем (например, если бы video был
+      // не muted, play() мог бы быть отклонён политикой браузера).
+      this.modal.querySelector('.mission-card-media video')?.play().catch(() => {});
       this.modal.querySelector('#prevSlide')?.addEventListener('click', () => { i -= 1; render(); });
       this.modal.querySelector('#nextSlide').addEventListener('click', () => {
         if (i < mission.slides.length - 1) { i += 1; render(); return; }

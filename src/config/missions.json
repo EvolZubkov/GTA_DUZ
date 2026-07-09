@@ -18,43 +18,140 @@
     "caller": "Батя К",
     "title": "Массовые рассылки",
     "marker": { "x": 26, "z": -16 },
-    "objective": "Доберитесь до района Mail District",
-    "phoneText": "Есть дело. Нужно, чтобы весь город получил сообщение одновременно. Берешь работу?",
+    "objective": "Доберитесь до района Почтелье",
+    "phoneText": "Есть дело. При отправке рассылок из Evolution дизайн ломается, использование PLEX на Alt Linux невозможно, со следующего года будет вообще недоступно",
     "slides": [
-      { "title": "Mass Mailing", "text": "Добавили массовые рассылки в Почтелье." },
-      { "title": "Что изменилось", "text": "Теперь коммуникации можно запускать массово и быстрее." },
-      { "title": "Mission Passed", "text": "Communication reputation +10" }
+      {
+        "title": "Почтелье",
+        "text": "Реализован функционал отправки персонализированных рассылок по шаблону с помощью Почтелье",
+        "video": "mailing.mp4",
+        "videoPosition": "bottom",
+        "videoSize": 95,
+        "animation": "slide",
+        "animationDirection": "up"
+      },
+      { "title": "Mission Passed", "text": "Communication reputation +10", "animation": "fade" }
     ],
     "reward": "Mass Communicator"
   },
   {
-    "id": "dashboard",
+    "id": "skillum-templates",
     "type": "phone",
     "caller": "Батя К",
-    "title": "B2B Dashboard",
-    "marker": { "x": 46, "z": 34 },
-    "objective": "Доберитесь до Business Center",
-    "phoneText": "Новый B2B-заказчик хочет красивый отчет. Excel есть, но нужен dashboard. Делаем?",
+    "title": "Шаблоны тестов Skillum",
+    "marker": { "x": -46, "z": -34 },
+    "objective": "Доберитесь до Skillum Hills",
+    "phoneText": "Проблема: Сборка нестандартных тестов требует больших затрат на верстку и дизайн, внесение изменений в банк вопросов порой равносильно их полной пересборке.",
     "slides": [
-      { "title": "Новый B2B-клиент", "text": "Под клиента подготовили отчет в Excel и HTML Dashboard." },
-      { "title": "HTML Dashboard", "text": "Простой просмотр через браузер, презентабельный формат для заказчика." },
-      { "title": "Mission Passed", "text": "B2B reputation +15" }
+      {
+        "title": "Результат",
+        "bullets": [
+          "Скиллум поддерживает возможность импорта шаблонов и подключения их к тестам",
+          "Реализована возможность добавления в тесты страниц с инструкциями, информационными материалами",
+          "Теперь обновление тестов, подобных сертификационному тесту для руководителей – это одна команда"
+        ],
+        "video": "skillum-templates.mp4",
+        "videoPosition": "bottom",
+        "videoSize": 95,
+        "animation": "slide",
+        "animationDirection": "up"
+      },
+      { "title": "Mission Passed", "text": "Skillum reputation +20", "animation": "fade" }
     ],
-    "reward": "Dashboard Architect"
+    "reward": "Skillum Templates Pro"
   },
   {
-    "id": "skillum",
-    "type": "sms",
-    "caller": "Skillum Bot",
-    "title": "Skillum Upgrade",
-    "marker": { "x": -42, "z": 42 },
+    "id": "skillum-scales",
+    "type": "phone",
+    "caller": "Батя К",
+    "title": "Автошкалы и отладчик Skillum",
+    "marker": { "x": 58, "z": -8 },
     "objective": "Доберитесь до Skillum Hills",
-    "phoneText": "Обновление конструктора тестов готово к демонстрации.",
+    "phoneText": "Проблема: Анализ результатов тестов требует от команды оценки работы с выгрузками из ОУ, доступных только через запросы на 2ЛТП, затрат ручного труда",
     "slides": [
-      { "title": "Skillum обновляется", "text": "Развитие создания тестов и подготовка новой версии." },
-      { "title": "Next Release", "text": "Новая база для следующих продуктовых улучшений." },
-      { "title": "Mission Passed", "text": "Product XP +1500" }
+      {
+        "title": "Результат",
+        "bullets": [
+          "В Скиллум для теста можно определить шкалы и показатели, значения которых формируются по мере прохождения теста пользователем. После прохождения теста у оценщика есть все необходимое, дополнительной обработки выгрузок не требуется",
+          "Реализован отладчик для тестов, который позволяет оценить корректность параметров теста. Теперь не нужны множественные перепубликации теста для того, чтобы убедиться в его корректности"
+        ],
+        "video": "skillum-scales.mp4",
+        "videoPosition": "bottom",
+        "videoSize": 95,
+        "animation": "slide",
+        "animationDirection": "left"
+      },
+      { "title": "Mission Passed", "text": "Skillum reputation +25", "animation": "fade" }
     ],
-    "reward": "Skillum Level Up"
+    "reward": "Skillum Analytics Master"
+  },
+  {
+    "id": "webtutor-cooldown",
+    "type": "phone",
+    "caller": "Батя К",
+    "title": "Тайм-аут в WebTutor",
+    "marker": { "x": 8, "z": 58 },
+    "objective": "Доберитесь до WebTutor Yard",
+    "phoneText": "Проблема: Чтобы ограничить для пользователя возможность повторного прохождения теста в течение определенного времени, в WebTutor требуется сделать тест «вечным» - множество ошибок, запросы на 2ЛТП",
+    "slides": [
+      {
+        "title": "Результат",
+        "text": "Реализован механизм контроля времени «охлаждения» внутри SCORM, генерируемых Skillum",
+        "video": "webtutor-cooldown.mp4",
+        "videoPosition": "bottom",
+        "videoSize": 95,
+        "animation": "slide",
+        "animationDirection": "right"
+      },
+      { "title": "Mission Passed", "text": "WebTutor reputation +15", "animation": "fade" }
+    ],
+    "reward": "WebTutor Fixer"
+  },
+  {
+    "id": "b2b-reports",
+    "type": "phone",
+    "caller": "Батя К",
+    "title": "Автоотчеты для B2B",
+    "marker": { "x": 46, "z": 34 },
+    "objective": "Доберитесь до Business Center",
+    "phoneText": "Проблема: Требуется получать отчет о статусе прохождения треков в B2B с визуализацией данных, с формированием рейтинга руководителей",
+    "slides": [
+      {
+        "title": "Результат",
+        "text": "Разработана механика автоматической регулярной генерации отчетов с отправкой на почту заказчику",
+        "video": "b2b-reports.mp4",
+        "videoPosition": "bottom",
+        "videoSize": 95,
+        "animation": "slide",
+        "animationDirection": "up"
+      },
+      { "title": "Mission Passed", "text": "B2B reputation +20", "animation": "fade" }
+    ],
+    "reward": "B2B Report Automator"
+  },
+  {
+    "id": "mailing-rescue",
+    "type": "phone",
+    "caller": "Батя К",
+    "title": "Почтелье для всех",
+    "marker": { "x": -24, "z": 16 },
+    "objective": "Доберитесь до района Почтелье",
+    "phoneText": "Проблема: Сложности с рассылками – не только у ДУЗ. Нужно спасти коллег",
+    "slides": [
+      {
+        "title": "Результат",
+        "bullets": [
+          "В Почтелье появилась возможность создавать дизайн-пакеты под разные айдентики, дизайн-системы",
+          "Почтелье передан для использования в Департамент внутренних коммуникаций, в РТК ИТ (команда проекта Лукоморье), общаемся с Центром развития корпоративных сервисов и И. Хилковой (оценка КВС и т.п.)"
+        ],
+        "video": "mailing-rescue.mp4",
+        "videoPosition": "bottom",
+        "videoSize": 95,
+        "animation": "slide",
+        "animationDirection": "left"
+      },
+      { "title": "Mission Passed", "text": "Mail District reputation +30", "animation": "fade" }
+    ],
+    "reward": "Спаситель Почтелье"
   }
 ]
