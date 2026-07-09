@@ -28,7 +28,13 @@ canvas { display: block; }
 .hint.visible { opacity: 1; }
 .toast { position:absolute; top: 90px; left:50%; transform:translateX(-50%) translateY(-20px); padding: 14px 24px; border-radius:14px; background:rgba(8,5,15,.9); border:1px solid rgba(255,255,255,.2); opacity:0; transition:.2s; font-size:20px; font-weight:900; }
 .toast.visible { opacity:1; transform:translateX(-50%) translateY(0); }
-.modal { pointer-events:auto; position:absolute; inset:0; display:grid; place-items:center; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
+/* z-index обязателен: .touch-controls — position:absolute с явным z-index:1,
+   а у .modal его не было (z-index:auto) — по правилам стекинга позиционированный
+   элемент с явным z-index рисуется НАД соседом с z-index:auto независимо от
+   порядка в DOM. .touch-look-zone (invisible, inset:0, pointer-events:auto)
+   поэтому визуально пропускал модалку насквозь, но перехватывал тапы —
+   кнопки на мобиле были видны, но не нажимались. */
+.modal { pointer-events:auto; position:absolute; inset:0; z-index:10; display:grid; place-items:center; background: rgba(0,0,0,.45); backdrop-filter: blur(3px); }
 .modal.hidden { display:none; }
 .modal.failed { background: rgba(40,0,5,.7); }
 /* max-height+overflow — слайд с видео и несколькими буллетами легко
