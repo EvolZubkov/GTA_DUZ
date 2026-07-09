@@ -19,7 +19,15 @@ export class AudioManager {
     this.achievement = new Audio(this.url(AUDIO_FILES.achievement));
     this.achievement.volume = VOLUME.sfx;
 
-    document.addEventListener('pointerdown', () => this.unlock(), { once: true });
+    // Без { once: true } — на реальных мобильных браузерах первая попытка
+    // может тихо не пройти (более строгая политика автоплея, чем в
+    // Playwright-эмуляции, где ровно этот сценарий отрабатывал штатно;
+    // самая частая причина — гонка/условия на конкретном устройстве, не
+    // воспроизводимая в тестах). once:true в таком случае оставлял звук
+    // выключенным навсегда — теперь пробуем на каждом тапе, но только пока
+    // реально не заиграло (paused-проверка), так что уже идущий трек не
+    // дёргается и не перезапускается повторными попытками.
+    document.addEventListener('pointerdown', () => this.unlock());
   }
 
   url(file) {
@@ -34,9 +42,9 @@ export class AudioManager {
   }
 
   unlock() {
-    this.music.play().catch(() => {});
-    this.cityNoise1.play().catch(() => {});
-    this.cityNoise2.play().catch(() => {});
+    if (this.music.paused) this.music.play().catch(() => {});
+    if (this.cityNoise1.paused) this.cityNoise1.play().catch(() => {});
+    if (this.cityNoise2.paused) this.cityNoise2.play().catch(() => {});
   }
 
   playRingtone() {

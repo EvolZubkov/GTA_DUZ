@@ -59,7 +59,7 @@ export const MISSION_VOICE = {
 };
 
 export const VOLUME = {
-  music: 0.05,
+  music: 0.02,
   city: 0.2,
   sfx: 0.35,
   // Финальный трек в титрах — отдельная громкость от фоновой музыки

@@ -279,3 +279,20 @@ button.danger { background:#ff3b7a; color:white; }
   font-size:20px; font-weight:900; display:grid; place-items:center;
 }
 .touch-btn-jump { background:rgba(34,244,255,.22); border-color:rgba(34,244,255,.4); }
+
+/* Миникарта/objective/hint/toast были в размерах, посчитанных под десктоп —
+   на телефоне (pointer:coarse — тот же признак, что и isTouchDevice() в JS)
+   занимали слишком много маленького экрана. Уменьшаем и заодно поднимаем
+   hint повыше — на телефоне снизу экрана уже джойстик с кнопками, при
+   прежнем bottom:86px подсказка могла наезжать на них на узких экранах. */
+@media (pointer: coarse) {
+  .objective { width:200px; padding:10px 12px; top:78px; }
+  .objective b { font-size:10px; letter-spacing:1px; }
+  .objective p { font-size:13px; margin-top:5px; }
+  .minimap { width:104px; height:104px; top:78px; right:14px; }
+  .health { padding:8px 14px; font-size:20px; letter-spacing:2px; }
+  .hint { padding:10px 18px; font-size:14px; bottom:172px; }
+  .toast { padding:9px 16px; font-size:15px; top:66px; }
+  .brand b { font-size:22px; }
+  .brand span { font-size:11px; letter-spacing:3px; }
+}
