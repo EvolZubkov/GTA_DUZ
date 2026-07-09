@@ -13,6 +13,9 @@ yarn-error.log*
 .vscode/
 .idea/
 
+# Служебное состояние Claude Code (сессионные локи и т.п.) — не для репозитория.
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
