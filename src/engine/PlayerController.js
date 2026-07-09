@@ -59,6 +59,7 @@ export class PlayerController {
     if (this.grounded && !this.ui.blocksInput() && !this.locked) {
       this.velocityY = this.jumpPower;
       this.grounded = false;
+      this.audio?.playJump();
     }
   }
 
@@ -88,7 +89,13 @@ export class PlayerController {
     // при открытых модалках (звонок/слайды), а locked — во время сцены
     // смерти (см. DeathSequence), которая ещё до появления экрана "mission
     // failed" уже не должна давать двигаться/прыгать.
-    if (this.ui.blocksInput() || this.locked) return;
+    if (this.ui.blocksInput() || this.locked) {
+      // Иначе если игрок бежал и в этот момент открылась модалка (звонок/
+      // слайды) — update() перестаёт вызываться дальше по коду, и звук бега
+      // зацикленно играет вечно, ничем не остановленный.
+      this.audio?.stopRunning();
+      return;
+    }
 
     const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(this.camera.quaternion);
     forward.y = 0;
@@ -117,8 +124,11 @@ export class PlayerController {
 
     if (movement.lengthSq() > 1) movement.normalize();
     if (movement.lengthSq() > 0.0001) {
+      this.audio?.playRunning();
       movement.multiplyScalar(this.speed * dt);
       this.tryMove(movement);
+    } else {
+      this.audio?.stopRunning();
     }
 
     this.velocityY -= this.gravity * dt;

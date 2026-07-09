@@ -3,12 +3,14 @@ import { AssetManager } from './AssetManager.js';
 import { CollisionManager } from './CollisionManager.js';
 import { PlayerController } from './PlayerController.js';
 import { GameLoop } from './GameLoop.js';
+import { AudioManager } from './AudioManager.js';
 
 import { CityBuilder } from '../city/CityBuilder.js';
 import { MissionManager } from '../gameplay/MissionManager.js';
 import { TrafficSystem } from '../gameplay/TrafficSystem.js';
 import { PedestrianSystem } from '../gameplay/PedestrianSystem.js';
 import { DeathSequence } from '../gameplay/DeathSequence.js';
+import { CreditsSequence } from '../gameplay/CreditsSequence.js';
 import { HUD } from '../ui/HUD.js';
 import { TouchControls } from '../ui/TouchControls.js';
 import { isTouchDevice } from '../ui/device.js';
@@ -23,12 +25,18 @@ export class Game {
     this.assets = new AssetManager();
     this.collision = new CollisionManager();
     this.ui = new HUD(root);
+    this.audio = new AudioManager();
+    // HUD.openCall создаёт <video> кружочек звонка сама — усиление громкости
+    // (boostVideo) проще дать ей напрямую, чем тащить видео-элемент обратно
+    // в MissionManager только ради этого.
+    this.ui.audio = this.audio;
 
     this.player = new PlayerController(
       this.sceneManager.camera,
       this.collision,
       this.ui
     );
+    this.player.audio = this.audio;
 
     this.city = new CityBuilder(
       this.sceneManager.scene,
@@ -36,7 +44,14 @@ export class Game {
       this.collision
     );
 
-    this.missions = new MissionManager(this.sceneManager.scene, this.ui);
+    this.credits = new CreditsSequence({
+      sceneManager: this.sceneManager,
+      player: this.player,
+      ui: this.ui,
+      audio: this.audio
+    });
+
+    this.missions = new MissionManager(this.sceneManager.scene, this.ui, () => this.credits.trigger(), this.audio);
 
     // Только на тачскрине — на десктопе джойстик/кнопки только мешали бы,
     // да и isTouchDevice() там и не сработает.
@@ -121,6 +136,7 @@ export class Game {
     this.traffic.update(dt);
     this.pedestrians?.update(dt);
     this.deathSequence.update(dt);
+    this.credits.update(dt);
 
     this.ui.drawMinimap(this.player, this.missions);
 

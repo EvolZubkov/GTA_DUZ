@@ -5,9 +5,11 @@ import * as THREE from 'three';
 import MISSION_CHAIN from '../config/missions.json';
 
 export class MissionManager {
-  constructor(scene, ui) {
+  constructor(scene, ui, onAllComplete, audio) {
     this.scene = scene;
     this.ui = ui;
+    this.onAllComplete = onAllComplete;
+    this.audio = audio;
     this.chain = MISSION_CHAIN;
     this.index = 0;
     this.active = null;
@@ -66,33 +68,81 @@ export class MissionManager {
     if (marker) this.scene.remove(marker);
     this.markers.delete(mission.id);
     this.ui.showAchievement(mission.reward);
+    this.audio?.playAchievement();
     this.index += 1;
 
     const next = this.chain[this.index];
     if (!next) {
       this.active = null;
       this.ui.setObjective('Все миссии квартала завершены. Quarter passed.');
+      // update() перестаёт трогать hint, как только active === null — без
+      // этого последний "Нажми E, чтобы начать миссию" застревал на экране
+      // навсегда (он ставился, пока игрок стоял у маркера последней миссии,
+      // и больше никогда не сбрасывался).
+      this.ui.setInteractHint('');
+      this.onAllComplete?.();
       return;
     }
 
     this.active = null;
     this.ui.setObjective('Ждите звонок от Бати К');
-    setTimeout(() => this.incomingCall(next), 1000);
+    setTimeout(() => {
+      // followUpCall — отдельный самостоятельный звонок без миссии на
+      // выходе (фидбек видео-кружочком от только что закрытой миссии),
+      // идёт ПЕРЕД настоящим звонком по следующей миссии, а не вместо него.
+      if (mission.followUpCall) this.videoCall(mission.followUpCall, () => this.incomingCall(next));
+      else this.incomingCall(next);
+    }, 1000);
+  }
+
+  videoCall({ caller, video }, onHangUp) {
+    this.audio?.playRingtone();
+    this.ui.openCall({
+      caller,
+      text: '',
+      video,
+      continueLabel: 'Положить трубку',
+      forced: true,
+      // onAnswer — свайп (звонок перестаёт звонить в момент, когда трубку
+      // реально "взяли"), onAccept — клик "Положить трубку" уже потом.
+      onAnswer: () => this.audio?.stopRingtone(),
+      onAccept: () => setTimeout(onHangUp, 900),
+      onDecline: () => {
+        this.audio?.stopRingtone();
+        onHangUp();
+      }
+    });
   }
 
   incomingCall(mission) {
+    this.audio?.playRingtone();
     this.ui.openCall({
       caller: mission.caller || 'Батя К',
       text: mission.phoneText || 'Есть новая работа.',
       forced: this.declineCount >= 5,
+      // Озвучка идёт сразу по факту ответа (свайп), а не после того, как
+      // игрок дочитает текст и нажмёт "Продолжить" — "после снятия трубки",
+      // а не после закрытия звонка.
+      onAnswer: () => {
+        this.audio?.stopRingtone();
+        this.audio?.playMissionVoice(mission.id);
+      },
       onAccept: () => {
         this.declineCount = 0;
         this.activateMission(mission);
       },
       onDecline: () => {
+        this.audio?.stopRingtone();
         this.declineCount += 1;
-        if (this.declineCount === 5) this.ui.showToast('Батя К: собираешься уволиться?');
-        setTimeout(() => this.incomingCall(mission), 900);
+        // На 5-й отказ подряд — сообщение об увольнении и пауза побольше
+        // перед новым звонком (5с вместо обычных 900мс), чтобы alert
+        // успел доиграть, а не обрывался/накладывался на ringtone.
+        const isFiring = this.declineCount === 5;
+        if (isFiring) {
+          this.ui.showToast('Батя К: собираешься уволиться?');
+          this.audio?.playAlert();
+        }
+        setTimeout(() => this.incomingCall(mission), isFiring ? 5000 : 900);
       }
     });
   }

@@ -5,9 +5,9 @@ const Missions = (() => {
       desc:'Найти Батю К, вступить в банду ДУЗ и получить рабочий телефон.',
       reward:'+ Phone Unlocked · DУЗ Crew Joined', achievement:'Welcome to ДУЗ',
       slides:[
-        {kicker:'INTRO MISSION', title:'Добро пожаловать в Quarter City', text:'Чтобы получать задания квартала, сначала нужно вступить в банду ДУЗ.'},
+        {kicker:'INTRO MISSION', title:'Добро пожаловать в DUZ City', text:'Чтобы получать задания квартала, сначала нужно вступить в банду ДУЗ.'},
         {kicker:'CREW CONTACT', title:'Батя К', text:'Батя К выдает рабочий телефон. Через него будут приходить звонки, миссии и странные просьбы.'},
-        {kicker:'PHONE UNLOCKED', title:'Quarter Phone', text:'Теперь задания будут появляться не все сразу, а после звонков и сообщений.'}
+        {kicker:'PHONE UNLOCKED', title:'DUZ Phone', text:'Теперь задания будут появляться не все сразу, а после звонков и сообщений.'}
       ]
     },
     {

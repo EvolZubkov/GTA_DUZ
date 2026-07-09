@@ -11,6 +11,7 @@ canvas { display: block; }
 .brand b { display:block; font-size: 34px; line-height: .9; font-weight:900; text-transform:uppercase; letter-spacing:.5px; }
 .brand span { color:#22f4ff; letter-spacing: 5px; font-weight: 800; }
 .objective { position:absolute; top: 92px; left: 18px; width: 355px; padding: 18px; background: rgba(8,5,15,.78); border: 1px solid rgba(255,255,255,.18); border-radius: 16px; box-shadow: 0 0 32px rgba(34,244,255,.12); }
+.objective.hidden { display:none; }
 .objective b { color:#22f4ff; letter-spacing: 2px; font-size: 13px; }
 .objective p { margin: 8px 0 0; font-weight: 700; font-size: 18px; }
 .health { position:absolute; top: 18px; right: 20px; padding: 12px 20px; background: rgba(8,5,15,.82); border: 1px solid rgba(255,255,255,.2); border-radius: 999px; box-shadow: 0 0 24px rgba(255,43,214,.2); font-size: 30px; color: #ff3b7a; letter-spacing: 4px; }
@@ -38,7 +39,9 @@ canvas { display: block; }
 .eyebrow { color:#22f4ff; font-weight:900; letter-spacing:3px; text-transform:uppercase; }
 h1 { margin: 8px 0 12px; font-size: 44px; font-weight:900; text-transform:uppercase; letter-spacing:1px; }
 h2 { margin: 0 0 12px; font-size: 27px; color:#ffcf57; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
-p { font-size: 20px; font-weight:500; line-height: 1.5; }
+/* white-space:pre-line — иначе браузер по умолчанию схлопывает \n из JSON
+   (missions.json) в обычный пробел, перенос строки не показывается. */
+p { font-size: 20px; font-weight:500; line-height: 1.5; white-space: pre-line; }
 button { pointer-events:auto; margin-top: 18px; margin-right: 12px; border:0; border-radius:12px; padding: 14px 22px; background:#22f4ff; color:#061018; font-weight:900; cursor:pointer; }
 button.danger { background:#ff3b7a; color:white; }
 
@@ -50,38 +53,70 @@ button.danger { background:#ff3b7a; color:white; }
 /* Слайды миссий были тем же размером, что и любая другая карточка-модалка
    (звонок, "провал") — крупнее и просторнее, раз это основной контент
    игры, а не побочное уведомление. */
-/* Практически на весь экран — контент (видео-скринкаст + текст) заметно
-   крупнее, чем помещалось в прежние 880px. */
-.mission-card { width:min(1500px, 96vw); max-height:94vh; padding: 48px 64px; }
+/* Практически на весь экран, БЕЗ скролла — карточка теперь фиксированной
+   высоты (не max-height/auto, как базовый .card), а не просто ограничена
+   сверху: это даёт reflow-контексту реальный "бюджет" высоты, который
+   .mission-card-content ниже может честно поделить между текстом (по
+   контенту) и видео (остаток) через flex — а не гадать через auto/percent
+   circularity, как было раньше. */
+.mission-card {
+  width:min(1500px, 96vw);
+  height:90vh;
+  max-height:90vh;
+  padding: 40px 64px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
 .mission-card .eyebrow { font-size: 15px; }
 .mission-card h1 { font-size: 52px; letter-spacing: 1.5px; }
 .mission-card h2 { font-size: 32px; letter-spacing: .8px; }
 .mission-card p { font-size: 24px; line-height: 1.55; }
-.mission-card .row { margin-top: 24px; }
+.mission-card .row { flex: 0 0 auto; margin-top: 24px; }
 .mission-card button { font-size: 17px; padding: 16px 28px; }
 
 /* Слайд = зона видео (опционально) + текстовая зона. videoPosition решает
-   порядок/направление (row для left/right, column для top/bottom), videoSize
-   — долю зоны видео. Внутри текстовой зоны textWidth/textAlign — это и есть
-   "контейнер": более узкая колонка, не растянутая на всю ширину, с margin
-   auto по нужную сторону для позиционирования и text-align для выравнивания
-   самого текста. textValign — justify-content зоны, положение колонки по
-   высоте. */
-.mission-card-content { display:flex; gap: 32px; }
+   порядок/направление (row для left/right, column для top/bottom). Внутри
+   текстовой зоны textWidth/textAlign — это и есть "контейнер": более узкая
+   колонка, не растянутая на всю ширину, с margin auto по нужную сторону для
+   позиционирования и text-align для выравнивания самого текста. textValign
+   — justify-content зоны, положение колонки по высоте.
+   .mission-card-content — flex:1 в фиксированной по высоте карточке: текст
+   занимает столько, сколько нужно контенту (flex:0 0 auto на
+   .mission-card-text), видео — весь остаток (flex:1 1 auto на
+   .mission-card-media). Поэтому video{width:100%;height:100%} внутри уже не
+   гадает высоту через auto/percent-circularity (старый баг с невидимым
+   видео), а честно вписывается в реально выделенный remainder,
+   object-fit:contain — без обрезки кадра. */
+.mission-card-content { display:flex; gap: 32px; flex: 1 1 auto; min-height: 0; }
 .mission-card-content.vertical { flex-direction: column; }
-.mission-card-media { border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.45); }
-/* height:100% на видео зависело от высоты родителя (.mission-card-media),
-   а та в вертикальной раскладке ничем не задана (auto по контенту) —
-   циклическая процентная зависимость, которую спека резолвит по-разному в
-   зависимости от контекста, и на практике видео оказывалось нулевой высоты
-   (эффект "видео не видно"). height:auto считает высоту прямо из
-   собственного соотношения сторон видео при заданной ширине — без
-   зависимости от родителя вообще. */
-.mission-card-media video { display:block; width:100%; height:auto; }
+.mission-card-content .mission-card-text { flex: 0 0 auto; }
+.mission-card-content .mission-card-media { flex: 1 1 auto; min-height: 0; }
+.mission-card-media {
+  border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.45);
+  cursor: zoom-in;
+  display: flex; align-items: center; justify-content: center;
+  background: #000;
+}
+.mission-card-media video { display:block; width:100%; height:100%; object-fit:contain; }
+
+/* Разворот видео по клику на весь экран (поверх текста/кнопок/игры),
+   повторный клик — сворачивание обратно. position:fixed выводит элемент из
+   потока карточки — сам слайд при этом не двигается и не скроллится.
+   !important — перебивает инлайновые width/margin/order, которые render()
+   в HUD.js вешает на этот же элемент для обычного (не развёрнутого)
+   размещения (иначе inset:0 растягивал только высоту, а ширина оставалась
+   от videoSize% — проверено, разворот был на весь экран по высоте, но
+   только 75% по ширине). */
+.mission-card-media.expanded {
+  position: fixed !important; inset: 0 !important; z-index: 300;
+  width: 100% !important; height: 100% !important; margin: 0 !important;
+  border-radius: 0; cursor: zoom-out;
+}
 .mission-card-text { display:flex; flex-direction:column; min-width:0; }
 .mission-card-text-inner { max-width:100%; }
 .mission-bullets { margin: 12px 0 0; padding-left: 22px; font-size: 21px; font-weight:500; line-height:1.6; }
-.mission-bullets li { margin-bottom: 6px; }
+.mission-bullets li { margin-bottom: 6px; white-space: pre-line; }
 
 /* Анимация вешается как класс на свежесозданный узел при каждом рендере
    слайда (render() пересобирает innerHTML целиком) — поэтому срабатывает
@@ -100,6 +135,42 @@ button.danger { background:#ff3b7a; color:white; }
 
 .blink-overlay { position:fixed; inset:0; background:#000; opacity:0; pointer-events:none; transition:opacity .13s ease; z-index:50; }
 .blink-overlay.closed { opacity:1; }
+
+/* Финальные титры — полупрозрачный градиент (не сплошной фон), чтобы
+   отлетающий город на фоне оставался виден, а не просто чёрный экран с
+   текстом. Каждая строка .credits-line всплывает со своей задержкой через
+   --i (инлайновый custom property из HUD.showCredits), поэтому получается
+   настоящий "рулон" титров, а не одновременный список. */
+.credits {
+  position:fixed; inset:0; z-index:60; pointer-events:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background: linear-gradient(180deg, rgba(4,3,10,.25), rgba(4,3,10,.75));
+  text-align:center;
+}
+.credits.hidden { display:none; }
+.hud.credits-active .brand,
+.hud.credits-active .objective,
+.hud.credits-active .health,
+.hud.credits-active .minimap,
+.hud.credits-active .controls,
+.hud.credits-active .hint,
+.hud.credits-active .toast {
+  opacity: 0; pointer-events: none; transition: opacity .6s ease;
+}
+.credits-eyebrow { color:#22f4ff; font-weight:900; letter-spacing:4px; text-transform:uppercase; font-size:16px; opacity:0; animation: creditsFadeIn .8s ease .2s both; }
+.credits-title { font-size:56px; font-weight:900; text-transform:uppercase; letter-spacing:2px; color:#ffcf57; margin:10px 0 34px; opacity:0; animation: creditsFadeIn .8s ease .5s both; }
+.credits-list { display:flex; flex-direction:column; gap:14px; }
+.credits-line { font-size:26px; font-weight:600; opacity:0; animation: creditsLineIn .8s ease both; animation-delay: calc(1s + var(--i) * .9s); }
+/* Задержка (7s) больше, чем у последней строки титров (при 6 строках —
+   ~6.3s), чтобы кнопка не отвлекала, пока титры ещё доигрывают. */
+.credits-continue {
+  pointer-events:auto; margin-top:40px; opacity:0; animation: creditsFadeIn 1s ease 7s both;
+  border:1px solid rgba(255,255,255,.3); border-radius:12px; padding:14px 28px;
+  background:rgba(8,5,15,.6); color:white; font-weight:800; font-size:16px; cursor:pointer;
+}
+.credits-continue:hover { background:rgba(34,244,255,.18); border-color:#22f4ff; }
+@keyframes creditsFadeIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+@keyframes creditsLineIn { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform: translateY(0); } }
 
 /* Экран входящего вызова — стилизован под корпус смартфона, а не под
    обычную карточку-модалку, чтобы "звонок" реально выглядел звонком. */
@@ -126,6 +197,17 @@ button.danger { background:#ff3b7a; color:white; }
   display:grid; place-items:center; font-size:36px; font-weight:900; color:white;
   box-shadow: 0 0 30px rgba(255,43,214,.45);
 }
+.phone-avatar.hidden { display:none; }
+
+/* Кружочек с видео вместо аватара после ответа — как видеосообщение в
+   мессенджере, запускается прямо на экране звонка. */
+.phone-video-circle {
+  display:none; margin-top: 18px; width:190px; height:190px; border-radius:50%;
+  overflow:hidden; border:3px solid rgba(255,255,255,.25);
+  box-shadow: 0 0 40px rgba(255,43,214,.5);
+}
+.phone-video-circle.visible { display:block; }
+.phone-video-circle video { width:100%; height:100%; object-fit:cover; }
 .phone-caller { margin: 16px 0 6px; font-size: 26px; }
 
 /* Ответ звонка — трек со свайпом вместо клика по кружку-кнопке: ручка
